@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atelier Kely Echeverria</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;500&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">
+      <img src="images/logo.png" alt="Atelier Kely Echeverria" class="nav-logo-img" />
+    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#inicio" onclick="showPage('inicio')">Inicio</a></li>
+      <li><a href="#sobre-mi" onclick="showPage('sobre-mi')">Sobre Mi</a></li>
+      <li><a href="#catalogo" onclick="showPage('catalogo')">Catalogo</a></li>
+      <li><a href="#pedidos" onclick="showPage('pedidos')">Pedidos</a></li>
+      <li><a href="#contacto" onclick="showPage('contacto')">Contacto</a></li>
+      <li>
+        <button class="cart-btn" onclick="toggleCart()">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </li>
+    </ul>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ===================== PAGINA: INICIO ===================== -->
+  <section class="page active" id="page-inicio">
+    <div class="hero">
+      <div class="hero-content">
+        <p class="hero-subtitle">Bienvenida al</p>
+        <h1 class="hero-title">Atelier<br><em>Kely Echeverria</em></h1>
+        <p class="hero-desc">Prendas hechas con amor, precision y el mas fino detalle artesanal.</p>
+        <button class="btn-primary" onclick="showPage('catalogo')">Ver Catalogo</button>
+      </div>
+      <div class="hero-decoration">
+        <div class="circle-deco c1"></div>
+        <div class="circle-deco c2"></div>
+        <div class="thread-line"></div>
+      </div>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <i class="fas fa-cut"></i>
+        <h3>Confeccion a medida</h3>
+        <p>Cada prenda adaptada perfectamente a tu cuerpo y estilo.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-heart"></i>
+        <h3>Hecho con pasion</h3>
+        <p>Mas de 20 anos dedicados al arte de la costura.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-star"></i>
+        <h3>Calidad garantizada</h3>
+        <p>Materiales premium y acabados impecables en cada pieza.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGINA: SOBRE MI ===================== -->
+  <section class="page" id="page-sobre-mi">
+    <div class="about-wrapper">
+      <div class="about-image-col">
+        <div class="about-img-frame">
+          <img src="images/kely.jpg" alt="Kely Echeverria" class="about-photo" id="aboutPhoto" />
+          <div class="img-placeholder" id="imgPlaceholder">
+            <i class="fas fa-user-circle"></i>
+            <p>Foto de Kely</p>
+          </div>
+        </div>
+        <div class="about-badge">
+          <span>Modista</span>
+          <span class="badge-divider">+</span>
+          <span>Artesana</span>
+        </div>
+      </div>
+      <div class="about-text-col">
+        <p class="section-tag">Sobre Mi</p>
+        <h2 class="section-title">Kely Echeverria</h2>
+        <div class="about-bio" id="aboutBio">
+          <p>Soy modista de corazon. Desde pequeña encontre en la costura una forma de expresar creatividad, precision y amor por los detalles. Cada hilo, cada costura, cada prenda que sale de mis manos lleva consigo dedicacion y pasion.</p>
+          <p>En el Atelier Kely Echeverria creo prendas unicas adaptadas a cada cliente, porque creo que la moda debe sentirse como una segunda piel.</p>
+        </div>
+        <div class="admin-section" id="adminAbout" style="display:none;">
+          <h4>Editar descripcion</h4>
+          <textarea id="bioEdit" rows="6" placeholder="Escribe tu descripcion aqui..."></textarea>
+          <button class="btn-admin" onclick="saveBio()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGINA: CATALOGO ===================== -->
+  <section class="page" id="page-catalogo">
+    <div class="page-header">
+      <p class="section-tag">Nuestras prendas</p>
+      <h2 class="section-title">Catalogo</h2>
+    </div>
+
+    <div class="catalog-filters" id="catalogFilters">
+      <button class="filter-btn active" onclick="filterCatalog('todos', this)">Todos</button>
+    </div>
+
+    <div class="catalog-grid" id="catalogGrid">
+      <!-- productos cargados por JS -->
+    </div>
+
+    <div class="empty-catalog" id="emptyCatalog" style="display:none;">
+      <i class="fas fa-tshirt"></i>
+      <p>Aun no hay productos. Inicia sesion como administradora para agregar prendas.</p>
+    </div>
+
+    <!-- Panel admin: agregar producto -->
+    <div class="admin-panel" id="adminPanel" style="display:none;">
+      <h3>Agregar nueva prenda</h3>
+      <div class="admin-form">
+        <input type="text" id="prodName" placeholder="Nombre de la prenda" />
+        <input type="number" id="prodPrice" placeholder="Precio (COP)" />
+        <input type="text" id="prodCategory" placeholder="Categoria (ej: Vestidos, Blusas...)" />
+        <input type="text" id="prodColors" placeholder="Colores disponibles (separados por coma)" />
+        <input type="number" id="prodStock" placeholder="Cantidad disponible" />
+        <textarea id="prodDesc" placeholder="Descripcion de la prenda" rows="3"></textarea>
+        <div class="image-upload-area" onclick="document.getElementById('prodImg').click()">
+          <i class="fas fa-camera"></i>
+          <p>Subir foto de la prenda</p>
+          <input type="file" id="prodImg" accept="image/*" style="display:none;" onchange="previewImage(this)" />
+        </div>
+        <img id="imgPreview" style="display:none; max-height:150px; border-radius:8px; margin-top:8px;" />
+        <button class="btn-primary" onclick="addProduct()">Agregar prenda</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGINA: PEDIDOS ===================== -->
+  <section class="page" id="page-pedidos">
+    <div class="page-header">
+      <p class="section-tag">Hagamos algo especial</p>
+      <h2 class="section-title">Pedido Personalizado</h2>
+    </div>
+    <div class="order-wrapper">
+      <div class="order-info">
+        <h3>¿Como funciona?</h3>
+        <div class="step"><span>1</span><p>Describe la prenda que tienes en mente</p></div>
+        <div class="step"><span>2</span><p>Indica tus medidas o agenda una cita</p></div>
+        <div class="step"><span>3</span><p>Kely te contacta para confirmar detalles y precio</p></div>
+        <div class="step"><span>4</span><p>Recibe tu prenda unica hecha a medida</p></div>
+      </div>
+      <form class="order-form" onsubmit="sendOrder(event)">
+        <div class="form-group">
+          <label>Tu nombre</label>
+          <input type="text" id="orderName" placeholder="Nombre completo" required />
+        </div>
+        <div class="form-group">
+          <label>Tu WhatsApp o telefono</label>
+          <input type="text" id="orderPhone" placeholder="+57 300 0000000" required />
+        </div>
+        <div class="form-group">
+          <label>Tipo de prenda</label>
+          <select id="orderType">
+            <option value="">Selecciona una opcion</option>
+            <option>Vestido</option>
+            <option>Blusa</option>
+            <option>Falda</option>
+            <option>Pantalon</option>
+            <option>Traje de noche</option>
+            <option>Ropa infantil</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descripcion del pedido</label>
+          <textarea id="orderDesc" rows="4" placeholder="Describe el estilo, colores, tela, ocasion..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Medidas (opcional)</label>
+          <textarea id="orderMedidas" rows="3" placeholder="Busto, cintura, cadera, largo, etc."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Enviar pedido por WhatsApp</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===================== PAGINA: CONTACTO ===================== -->
+  <section class="page" id="page-contacto">
+    <div class="page-header">
+      <p class="section-tag">Escribeme</p>
+      <h2 class="section-title">Contacto</h2>
+    </div>
+    <div class="contact-wrapper">
+      <div class="contact-cards">
+        <a href="https://wa.me/573017255825" target="_blank" class="contact-card whatsapp">
+          <i class="fab fa-whatsapp"></i>
+          <span>WhatsApp</span>
+          <p>+57 301 7255825</p>
+        </a>
+        <a href="https://instagram.com/" target="_blank" class="contact-card instagram" id="linkInstagram">
+          <i class="fab fa-instagram"></i>
+          <span>Instagram</span>
+          <p id="instagramHandle">@atelier.kely</p>
+        </a>
+        <a href="https://facebook.com/" target="_blank" class="contact-card facebook" id="linkFacebook">
+          <i class="fab fa-facebook"></i>
+          <span>Facebook</span>
+          <p id="facebookHandle">Atelier Kely Echeverria</p>
+        </a>
+        <a href="mailto:" class="contact-card email" id="linkEmail">
+          <i class="fas fa-envelope"></i>
+          <span>Gmail</span>
+          <p id="emailHandle">kelycheverria@gmail.com</p>
+        </a>
+      </div>
+
+      <div class="admin-section" id="adminContact" style="display:none;">
+        <h4>Editar redes sociales</h4>
+        <input type="text" id="editInstagram" placeholder="Usuario de Instagram (ej: @atelier.kely)" />
+        <input type="text" id="editFacebook" placeholder="Nombre en Facebook" />
+        <input type="email" id="editEmail" placeholder="Correo electronico" />
+        <button class="btn-admin" onclick="saveContact()">Guardar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CARRITO ===================== -->
+  <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+  <div class="cart-panel" id="cartPanel">
+    <div class="cart-header">
+      <h3>Tu bolsa</h3>
+      <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="cart-empty">
+        <i class="fas fa-shopping-bag"></i>
+        <p>Tu bolsa esta vacia</p>
+      </div>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none;">
+      <div class="cart-total">
+        <span>Total:</span>
+        <strong id="cartTotal">$0</strong>
+      </div>
+      <button class="btn-whatsapp" onclick="checkoutWhatsApp()">
+        <i class="fab fa-whatsapp"></i> Pedir por WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL PRODUCTO ===================== -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+  <div class="modal" id="productModal">
+    <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    <div class="modal-content" id="modalContent"></div>
+  </div>
+
+  <!-- ===================== ADMIN FLOATING BUTTON ===================== -->
+  <button class="admin-fab" onclick="toggleAdminLogin()" title="Acceso administradora">
+    <i class="fas fa-lock" id="adminIcon"></i>
+  </button>
+
+  <!-- LOGIN ADMIN -->
+  <div class="admin-login-panel" id="adminLoginPanel" style="display:none;">
+    <h4>Acceso Administradora</h4>
+    <input type="password" id="adminPass" placeholder="Contrasena" onkeydown="if(event.key==='Enter') loginAdmin()" />
+    <button class="btn-admin" onclick="loginAdmin()">Entrar</button>
+    
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
