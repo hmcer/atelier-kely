@@ -32,7 +32,7 @@ const db = {
 
 // ===================== APP STATE =====================
 const WHATSAPP_NUMBER = '573017255825';
-const ADMIN_PASSWORD = 'kely2024';
+const ADMIN_PASSWORD = 'kely1980';
 
 let state = {
   isAdmin: false,
