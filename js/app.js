@@ -1,3 +1,35 @@
+// ===================== SUPABASE CONFIG =====================
+const SUPABASE_URL = 'https://jgnzbtmekbpziyzilgyz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnbnpidG1la2Jweml5emlsZ3l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MjYzMTgsImV4cCI6MjA5MjIwMjMxOH0.BF7CHU93fLstN1Zc-CFIHjAbxL0X7Tzo3nNHWOWeCxY';
+
+const db = {
+  async get(table) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?order=created_at.desc`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    return res.json();
+  },
+  async insert(table, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+  async delete(table, id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+  }
+};
+
 // ===================== APP STATE =====================
 const WHATSAPP_NUMBER = '573017255825';
 const ADMIN_PASSWORD = 'kely2024';
@@ -10,14 +42,13 @@ let state = {
 };
 
 // ===================== INIT =====================
-window.addEventListener('DOMContentLoaded', () => {
-  loadFromStorage();
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadProducts();
   renderCatalog();
   updateCartUI();
   loadContactInfo();
   loadBio();
 
-  // Ocultar foto placeholder si existe imagen real
   const aboutPhoto = document.getElementById('aboutPhoto');
   if (aboutPhoto) {
     aboutPhoto.addEventListener('error', () => {
@@ -30,14 +61,30 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ===================== LOAD PRODUCTS =====================
+async function loadProducts() {
+  try {
+    showToast('Cargando catalogo...');
+    const data = await db.get('products');
+    if (Array.isArray(data)) {
+      state.products = data.map(p => ({
+        ...p,
+        colors: p.colors || [],
+        desc: p.description,
+      }));
+      state.categories = new Set(['todos', ...state.products.map(p => p.category)]);
+    }
+  } catch (e) {
+    console.error('Error cargando productos:', e);
+  }
+}
+
 // ===================== NAVIGATION =====================
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('page-' + pageId);
   if (target) target.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  // Cerrar menu movil
   document.getElementById('navLinks').classList.remove('open');
 }
 
@@ -62,6 +109,7 @@ function loginAdmin() {
     document.getElementById('adminAbout').style.display = 'block';
     document.getElementById('adminContact').style.display = 'block';
     document.getElementById('adminPass').value = '';
+    renderCatalog();
     showToast('Bienvenida, Kely!');
   } else {
     showToast('Contrasena incorrecta');
@@ -69,7 +117,7 @@ function loginAdmin() {
 }
 
 // ===================== PRODUCTS =====================
-function addProduct() {
+async function addProduct() {
   const name = document.getElementById('prodName').value.trim();
   const price = document.getElementById('prodPrice').value;
   const category = document.getElementById('prodCategory').value.trim();
@@ -84,36 +132,45 @@ function addProduct() {
   }
 
   const product = {
-    id: Date.now(),
     name,
     price: parseInt(price),
     category,
     colors: colors ? colors.split(',').map(c => c.trim()) : [],
     stock: parseInt(stock) || 0,
-    desc,
+    description: desc,
     img: null,
   };
 
-  // Leer imagen si hay
   if (imgInput.files && imgInput.files[0]) {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       product.img = e.target.result;
-      finalizeAddProduct(product);
+      await finalizeAddProduct(product);
     };
     reader.readAsDataURL(imgInput.files[0]);
   } else {
-    finalizeAddProduct(product);
+    await finalizeAddProduct(product);
   }
 }
 
-function finalizeAddProduct(product) {
-  state.products.push(product);
-  state.categories.add(product.category);
-  saveToStorage();
-  renderCatalog();
-  clearProductForm();
-  showToast('Prenda agregada al catalogo');
+async function finalizeAddProduct(product) {
+  try {
+    showToast('Guardando prenda...');
+    const result = await db.insert('products', product);
+    if (Array.isArray(result) && result[0]) {
+      const saved = { ...result[0], desc: result[0].description, colors: result[0].colors || [] };
+      state.products.unshift(saved);
+      state.categories.add(saved.category);
+      renderCatalog();
+      clearProductForm();
+      showToast('Prenda agregada al catalogo');
+    } else {
+      showToast('Error al guardar, intenta de nuevo');
+    }
+  } catch (e) {
+    console.error(e);
+    showToast('Error de conexion');
+  }
 }
 
 function clearProductForm() {
@@ -142,7 +199,6 @@ function renderCatalog(filter = 'todos') {
   const empty = document.getElementById('emptyCatalog');
   const filtersEl = document.getElementById('catalogFilters');
 
-  // Filtros
   filtersEl.innerHTML = '';
   const allCategories = ['todos', ...Array.from(state.categories).filter(c => c !== 'todos')];
   allCategories.forEach(cat => {
@@ -175,7 +231,7 @@ function renderCatalog(filter = 'todos') {
         <h4>${p.name}</h4>
         <p class="product-price">${formatPrice(p.price)}</p>
         <div class="product-colors">
-          ${p.colors.map(c => `<div class="color-dot" style="background:${colorToHex(c)};" title="${c}"></div>`).join('')}
+          ${(p.colors || []).map(c => `<div class="color-dot" style="background:${colorToHex(c)};" title="${c}"></div>`).join('')}
         </div>
         <button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCart(${p.id})">
           Agregar al carrito
@@ -192,14 +248,17 @@ function filterCatalog(cat, btn) {
   renderCatalog(cat);
 }
 
-function deleteProduct(id) {
-  if (!confirm('¿Eliminar esta prenda del catalogo?')) return;
-  state.products = state.products.filter(p => p.id !== id);
-  // Recalcular categorias
-  state.categories = new Set(['todos', ...state.products.map(p => p.category)]);
-  saveToStorage();
-  renderCatalog();
-  showToast('Prenda eliminada');
+async function deleteProduct(id) {
+  if (!confirm('Eliminar esta prenda del catalogo?')) return;
+  try {
+    await db.delete('products', id);
+    state.products = state.products.filter(p => p.id !== id);
+    state.categories = new Set(['todos', ...state.products.map(p => p.category)]);
+    renderCatalog();
+    showToast('Prenda eliminada');
+  } catch (e) {
+    showToast('Error al eliminar');
+  }
 }
 
 // ===================== MODAL =====================
@@ -215,9 +274,9 @@ function openModal(id) {
     }
     <h2 class="modal-title">${p.name}</h2>
     <p class="modal-price">${formatPrice(p.price)}</p>
-    ${p.desc ? `<p class="modal-desc">${p.desc}</p>` : ''}
+    ${p.desc || p.description ? `<p class="modal-desc">${p.desc || p.description}</p>` : ''}
     <div class="modal-meta">
-      ${p.colors.length ? `<span>Colores</span><p>${p.colors.join(', ')}</p>` : ''}
+      ${(p.colors || []).length ? `<span>Colores</span><p>${p.colors.join(', ')}</p>` : ''}
       <span style="margin-top:10px; display:block;">Disponibilidad</span>
       <p>${p.stock > 0 ? `${p.stock} unidades disponibles` : 'Disponible bajo pedido'}</p>
     </div>
@@ -380,20 +439,6 @@ function loadContactInfo() {
   if (ig) { document.getElementById('instagramHandle').textContent = ig; document.getElementById('linkInstagram').href = `https://instagram.com/${ig.replace('@','')}`; }
   if (fb) { document.getElementById('facebookHandle').textContent = fb; }
   if (em) { document.getElementById('emailHandle').textContent = em; document.getElementById('linkEmail').href = `mailto:${em}`; }
-}
-
-// ===================== STORAGE =====================
-function saveToStorage() {
-  localStorage.setItem('kely_products', JSON.stringify(state.products));
-  localStorage.setItem('kely_categories', JSON.stringify([...state.categories]));
-}
-
-function loadFromStorage() {
-  const prods = localStorage.getItem('kely_products');
-  const cats = localStorage.getItem('kely_categories');
-  if (prods) state.products = JSON.parse(prods);
-  if (cats) state.categories = new Set(JSON.parse(cats));
-  else state.categories = new Set(['todos']);
 }
 
 // ===================== UTILS =====================
